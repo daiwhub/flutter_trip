@@ -1,5 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
+import 'package:flutter_trip/dao/home_dao.dart';
+import 'package:flutter_trip/model/common_model.dart';
+import 'package:flutter_trip/model/config_model.dart';
+import 'package:flutter_trip/model/gridnav_model.dart';
+import 'package:flutter_trip/model/home_model.dart';
+import 'package:flutter_trip/model/salesbox_model.dart';
 
 ///首页
 class HomePage extends StatefulWidget {
@@ -17,6 +25,52 @@ class _HomePageState extends State<HomePage> {
   ];
 
   double _appBarAlpha = 0;
+
+  ConfigModel config;
+  List<CommonModel> bannerList;
+  List<CommonModel> localNavList;
+  GridNavModel gridNav;
+  List<CommonModel> subNavList;
+  SalesBoxModel salesBox;
+
+  String resultString;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<Null> _loadData() async {
+    HomeDao.fetch().then((result) {
+      setState(() {
+////       config = homeModel.config;
+////       bannerList = homeModel.bannerList;
+////       localNavList = homeModel.localNavList;
+////       gridNav = homeModel.gridNav;
+////       subNavList = homeModel.subNavList;
+////       salesBox = homeModel.salesBox;
+        resultString = json.encode(result);
+      });
+    }).catchError((e) {
+      resultString = e.toString();
+    });
+
+//    try{
+//     HomeModel homeModel = await HomeDao.fetch();
+//     setState(() {
+////       config = homeModel.config;
+////       bannerList = homeModel.bannerList;
+////       localNavList = homeModel.localNavList;
+////       gridNav = homeModel.gridNav;
+////       subNavList = homeModel.subNavList;
+////       salesBox = homeModel.salesBox;
+//       resultString = json.encode(homeModel.toJson());
+//     });
+//    }catch(e){
+//      print(e);
+//    }
+  }
 
   _onScroll(offset) {
     double alpha = offset / APPBAR_SCROLL_OFFSET;
@@ -39,7 +93,7 @@ class _HomePageState extends State<HomePage> {
             context: context,
             removeTop: true,
             child: NotificationListener(
-              // ignore: missing_return
+                // ignore: missing_return
                 onNotification: (scrollNotification) {
                   // ignore: missing_return
                   if (scrollNotification is ScrollUpdateNotification &&
@@ -69,7 +123,7 @@ class _HomePageState extends State<HomePage> {
                     Container(
                       height: 800,
                       child: ListTile(
-                        title: Text('内容'),
+                        title: Text(resultString),
                       ),
                     )
                   ],
