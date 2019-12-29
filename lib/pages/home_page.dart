@@ -8,6 +8,7 @@ import 'package:flutter_trip/model/config_model.dart';
 import 'package:flutter_trip/model/gridnav_model.dart';
 import 'package:flutter_trip/model/home_model.dart';
 import 'package:flutter_trip/model/salesbox_model.dart';
+import 'package:flutter_trip/widget/grid_nav.dart';
 import 'package:flutter_trip/widget/local_nav.dart';
 
 ///首页
@@ -86,71 +87,76 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return
-      Scaffold(
-        backgroundColor: Color(0xfff2f2f2),
-        body: Stack(
-          children: <Widget>[
-            // ignore: missing_return
-            MediaQuery.removePadding(
-                context: context,
-                removeTop: true,
-                child: NotificationListener(
+    return Scaffold(
+      backgroundColor: Color(0xfff2f2f2),
+      body: Stack(
+        children: <Widget>[
+          // ignore: missing_return
+          MediaQuery.removePadding(
+              context: context,
+              removeTop: true,
+              child: NotificationListener(
                   // ignore: missing_return
-                    onNotification: (scrollNotification) {
+                  onNotification: (scrollNotification) {
+                    // ignore: missing_return
+                    if (scrollNotification is ScrollUpdateNotification &&
+                        scrollNotification.depth == 0) {
+                      //滚动且是列表滚动的时候
                       // ignore: missing_return
-                      if (scrollNotification is ScrollUpdateNotification &&
-                          scrollNotification.depth == 0) {
-                        //滚动且是列表滚动的时候
-                        // ignore: missing_return
-                        _onScroll(scrollNotification.metrics.pixels);
-                      }
-                    },
-                    child: ListView(
-                      children: <Widget>[
-                        Container(
-                          height: 160,
-                          child: Swiper(
-                            itemCount: _imageUrls.length,
-                            itemBuilder: (BuildContext context, int index) {
-                              return Image.network(
-                                _imageUrls[index],
-                                fit: BoxFit.fill,
-                              );
-                            },
-                            autoplay: true,
-                            pagination: SwiperPagination(),
-                            controller: SwiperController(),
-                          ),
+                      _onScroll(scrollNotification.metrics.pixels);
+                    }
+                  },
+                  child: ListView(
+                    children: <Widget>[
+                      Container(
+                        height: 160,
+                        child: Swiper(
+                          itemCount: _imageUrls.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return Image.network(
+                              _imageUrls[index],
+                              fit: BoxFit.fill,
+                            );
+                          },
+                          autoplay: true,
+                          pagination: SwiperPagination(),
+                          controller: SwiperController(),
                         ),
-                        Container(
-                          height: 800,
-                          child: ListView(
-                            children: <Widget>[
-                              Padding(
-                                padding: EdgeInsets.fromLTRB(7, 4, 7, 4),
-                                child: LocalNavWidget(localNavList: localNavList),
-                              )
-                            ],
-                          ),
-                        )
-                      ],
-                    ))),
-            Opacity(
-              opacity: _appBarAlpha,
-              child: Container(
-                height: 80,
-                decoration: BoxDecoration(color: Colors.white),
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 20),
-                    child: Text('首页'),
-                  ),
+                      ),
+                      Container(
+                        height: 800,
+                        child: ListView(
+                          children: <Widget>[
+                            Padding(
+                              padding: EdgeInsets.fromLTRB(7, 4, 7, 4),
+                              child: LocalNavWidget(localNavList: localNavList),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.fromLTRB(7, 3, 7, 3),
+                              child: GridNavWidget(
+                                gridNavModel: gridNav,
+                              ),
+                            )
+                          ],
+                        ),
+                      )
+                    ],
+                  ))),
+          Opacity(
+            opacity: _appBarAlpha,
+            child: Container(
+              height: 80,
+              decoration: BoxDecoration(color: Colors.white),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 20),
+                  child: Text('首页'),
                 ),
               ),
-            )
-          ],
-        ),
-      );
+            ),
+          )
+        ],
+      ),
+    );
   }
 }
