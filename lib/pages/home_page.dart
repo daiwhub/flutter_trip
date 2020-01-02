@@ -9,7 +9,11 @@ import 'package:flutter_trip/model/gridnav_model.dart';
 import 'package:flutter_trip/model/home_model.dart';
 import 'package:flutter_trip/model/salesbox_model.dart';
 import 'package:flutter_trip/widget/grid_nav.dart';
+import 'package:flutter_trip/widget/loading_container.dart';
 import 'package:flutter_trip/widget/local_nav.dart';
+import 'package:flutter_trip/widget/sales_box.dart';
+import 'package:flutter_trip/widget/sub_nav.dart';
+import 'package:flutter_trip/widget/webview.dart';
 
 ///首页
 class HomePage extends StatefulWidget {
@@ -20,22 +24,18 @@ class HomePage extends StatefulWidget {
 const APPBAR_SCROLL_OFFSET = 100;
 
 class _HomePageState extends State<HomePage> {
-  List _imageUrls = [
-    'http://pages.ctrip.com/commerce/promote/20180718/yxzy/img/640sygd.jpg',
-    'https://dimg04.c-ctrip.com/images/700u0r000000gxvb93E54_810_235_85.jpg',
-    'https://dimg04.c-ctrip.com/images/700c10000000pdili7D8B_780_235_57.jpg'
-  ];
-
   double _appBarAlpha = 0;
 
   ConfigModel config;
-  List<CommonModel> bannerList;
-  List<CommonModel> localNavList;
+  List<CommonModel> bannerList = [];
+  List<CommonModel> localNavList = [];
   GridNavModel gridNav;
-  List<CommonModel> subNavList;
+  List<CommonModel> subNavList = [];
   SalesBoxModel salesBox;
 
   String resultString;
+
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -52,9 +52,15 @@ class _HomePageState extends State<HomePage> {
         gridNav = homeModel.gridNav;
         subNavList = homeModel.subNavList;
         salesBox = homeModel.salesBox;
+
+        isLoading = false;
       });
     }).catchError((e) {
       print(e);
+
+      setState(() {
+        isLoading = false;
+      });
     });
 
 //    try{
@@ -89,74 +95,111 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xfff2f2f2),
-      body: Stack(
-        children: <Widget>[
-          // ignore: missing_return
-          MediaQuery.removePadding(
-              context: context,
-              removeTop: true,
-              child: NotificationListener(
+      body: RefreshIndicator(
+        child: _loadingView(isLoading),
+        onRefresh: _loadData,
+      ),
+    );
+  }
+
+  _loadingView(bool isLoading) {
+    return LoadingContainer(child: _stack(), isLoading: isLoading);
+  }
+
+  _stack() {
+    return Stack(
+      children: <Widget>[
+        // ignore: missing_return
+        MediaQuery.removePadding(
+            context: context,
+            removeTop: true,
+            child: NotificationListener(
+                // ignore: missing_return
+                onNotification: (scrollNotification) {
                   // ignore: missing_return
-                  onNotification: (scrollNotification) {
+                  if (scrollNotification is ScrollUpdateNotification &&
+                      scrollNotification.depth == 0) {
+                    //滚动且是列表滚动的时候
                     // ignore: missing_return
-                    if (scrollNotification is ScrollUpdateNotification &&
-                        scrollNotification.depth == 0) {
-                      //滚动且是列表滚动的时候
-                      // ignore: missing_return
-                      _onScroll(scrollNotification.metrics.pixels);
-                    }
-                  },
-                  child: ListView(
-                    children: <Widget>[
-                      Container(
-                        height: 160,
-                        child: Swiper(
-                          itemCount: _imageUrls.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            return Image.network(
-                              _imageUrls[index],
-                              fit: BoxFit.fill,
-                            );
-                          },
-                          autoplay: true,
-                          pagination: SwiperPagination(),
-                          controller: SwiperController(),
-                        ),
-                      ),
-                      Container(
-                        height: 800,
-                        child: ListView(
-                          children: <Widget>[
-                            Padding(
-                              padding: EdgeInsets.fromLTRB(7, 4, 7, 4),
-                              child: LocalNavWidget(localNavList: localNavList),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.fromLTRB(7, 3, 7, 3),
-                              child: GridNavWidget(
-                                gridNavModel: gridNav,
-                              ),
-                            )
-                          ],
-                        ),
-                      )
-                    ],
-                  ))),
-          Opacity(
-            opacity: _appBarAlpha,
-            child: Container(
-              height: 80,
-              decoration: BoxDecoration(color: Colors.white),
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 20),
-                  child: Text('首页'),
-                ),
+                    _onScroll(scrollNotification.metrics.pixels);
+                  }
+                },
+                child: _listView())),
+        Opacity(
+          opacity: _appBarAlpha,
+          child: Container(
+            height: 80,
+            decoration: BoxDecoration(color: Colors.white),
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 20),
+                child: Text('首页'),
               ),
             ),
-          )
-        ],
+          ),
+        )
+      ],
+    );
+  }
+
+  _banner() {
+    return Container(
+      height: 160,
+      child: Swiper(
+        itemCount: bannerList?.length,
+        itemBuilder: (BuildContext context, int index) {
+          return GestureDetector(
+            onTap: () {
+              CommonModel model = bannerList[index];
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => WebView(
+                            url: model.url,
+                            statusBarColor: model.statusBarColor,
+                            title: model.title,
+                            hideAppBar: model.hideAppBar,
+                          )));
+            },
+            child: Image.network(
+              bannerList[index].icon,
+              fit: BoxFit.fill,
+            ),
+          );
+        },
+        autoplay: true,
+        pagination: SwiperPagination(),
+        controller: SwiperController(),
       ),
+    );
+  }
+
+  _listView() {
+    return ListView(
+      children: <Widget>[
+        _banner(),
+        Padding(
+          padding: EdgeInsets.fromLTRB(7, 4, 7, 4),
+          child: LocalNavWidget(localNavList: localNavList),
+        ),
+        Padding(
+          padding: EdgeInsets.fromLTRB(7, 3, 7, 3),
+          child: GridNavWidget(
+            gridNavModel: gridNav,
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.fromLTRB(7, 0, 7, 0),
+          child: SubNav(
+            subNavList: subNavList,
+          ),
+        ),
+        Padding(
+            padding: EdgeInsets.fromLTRB(7, 7, 7, 4),
+            child: SalesBox(
+              salesBox: salesBox,
+            ))
+      ],
     );
   }
 }

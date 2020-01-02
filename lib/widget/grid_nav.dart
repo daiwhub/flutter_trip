@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_trip/model/common_model.dart';
 import 'package:flutter_trip/model/gridnav_model.dart';
+import 'package:flutter_trip/widget/webview.dart';
 
 class GridNavWidget extends StatefulWidget {
   final GridNavModel gridNavModel;
@@ -133,7 +134,11 @@ class _GridNavWidgetState extends State<GridNavWidget> {
 
   _wrapGesture(BuildContext context, CommonModel model, Widget widget) {
     return GestureDetector(
-      onTap: () {},
+      onTap: () {
+        Navigator.push(context, MaterialPageRoute(builder: (context) =>
+            WebView(url: model.url,statusBarColor: model.statusBarColor,title: model.title,hideAppBar: model.hideAppBar)
+        ));
+      },
       child: widget,
     );
   }
